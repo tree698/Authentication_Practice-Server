@@ -11,6 +11,9 @@ function required(key, defaultValue = undefined) {
 }
 
 export const config = {
+  bycrypt: {
+    saltRounds: parseInt(required('BCRYPT_SALT_ROUNDS', 10)),
+  },
   host: {
     port: parseInt(required('HOST_PORT', 8080)),
   },
@@ -18,3 +21,5 @@ export const config = {
     host: required('MONGO_DB_HOST'),
   },
 };
+
+// process.env.NODE_ENV === 'production / development'
