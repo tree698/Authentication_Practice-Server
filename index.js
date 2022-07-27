@@ -1,49 +1,28 @@
 import express from 'express';
-import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
+import 'express-async-errors';
+import authRouter from './router/auth_router.js';
 import { config } from './config.js';
 import { connectDB } from './db/database.js';
-import { User } from './model/user.js';
 
 const app = express();
 
 app.use(express.json());
-app.use(cookieParser());
+app.use(helmet());
+app.use(cors());
+app.use(morgan('tiny'));
 
-app.get('/', (req, res, next) => {
-  res.send('Hello World');
+app.use('/auth', authRouter);
+
+app.use((req, res, next) => {
+  res.sendStatus(404);
 });
 
-app.post('/register', (req, res) => {
-  const user = new User(req.body);
-  user.save((err, doc) => {
-    if (err) return res.json({ success: false, err });
-    return res.status(200).json({ success: true });
-  });
-});
-
-app.post('/login', (req, res) => {
-  User.findOne({ email: req.body.email }, (err, user) => {
-    if (!user)
-      return res.json({
-        loginSuccess: false,
-        message: 'email not found',
-      });
-    user.comparePassword(req.body.password, (err, isMatch) => {
-      if (!isMatch)
-        return res.json({
-          loginSuccess: false,
-          message: 'Wrong password',
-        });
-      user.generateToken((err, user) => {
-        if (err) return res.status(400).send(err);
-        res.cookie('w_authExp', user.tokenExp);
-        res.cookie('w_auth', user.token).status(200).json({
-          loginSuccess: true,
-          userId: user._id,
-        });
-      });
-    });
-  });
+app.use((error, req, res, next) => {
+  console.error(error);
+  res.sendStatus(500);
 });
 
 connectDB()
